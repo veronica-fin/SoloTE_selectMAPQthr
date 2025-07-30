@@ -27,6 +27,7 @@ argparse_object.add_argument("-a","--teannotation",help="TE annotation file in B
 argparse_object.add_argument("-o","--outputprefix",help="Prefix for output files",required=True)
 argparse_object.add_argument("--dual",help="Consider reads annotated to genes for calculation of TE expression (default = False, only consider non-genic reads).",action='store_true',required=False)
 argparse_object.add_argument("--minoverlap",help="Minimum overlap (in bp) between a read and a TE .",required=False,default=1)
+argparse_object.add_argument("--locusMAPQthr",help="Minimum MAPQ thr to select reads for locus quantification",required=False,default=255)
 
 commandargs = argparse_object.parse_args()
 
@@ -37,6 +38,7 @@ TE_bed = commandargs.teannotation
 outprefix = commandargs.outputprefix
 use_dual_mode = commandargs.dual
 min_overlap = commandargs.minoverlap
+min_MAPQ = commandargs.locusMAPQthr
 
 
 starting_time = datetime.now()
@@ -162,7 +164,7 @@ if os.path.exists(annotated_te_bam):
 else:
     annotateBAMpath=SoloTE_Home+"/annotateBAM.py"
     temp_annotated_te_bam = "temp_annotated_te.bam"
-    cmd="python "+annotateBAMpath+" "+te_bam+" "+selected_TEs+" "+temp_annotated_te_bam+" "+str(min_overlap)
+    cmd="python "+annotateBAMpath+" "+te_bam+" "+selected_TEs+" "+temp_annotated_te_bam+" "+str(min_overlap) +" "+str(min_MAPQ)
     print(cmd)
     os.system(cmd)
     sorted_bam=annotated_te_bam+".sorted."
@@ -320,7 +322,3 @@ elapsed_time = finishing_time - starting_time
 finishing_time_formatted = finishing_time.strftime("%H:%M:%S")
 print("SoloTE finished at "+finishing_time_formatted)
 print("SoloTE total running time: "+str(elapsed_time))
-
-
-
-

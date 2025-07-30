@@ -12,6 +12,8 @@ outfile = pysam.AlignmentFile(outfilename, "wb",template=samfile)
 
 min_overlap = int(sys.argv[4])
 
+thr = int(sys.argv[5])
+
 for te in te_bed_iterator:
     te_sequence=te[0]
     te_start=int(te[1])
