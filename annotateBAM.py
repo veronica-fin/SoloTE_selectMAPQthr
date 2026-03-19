@@ -14,14 +14,28 @@ min_overlap = int(sys.argv[4])
 
 thr = int(sys.argv[5])
 
+
+is_stranded = sys.argv[6].lower() == 'true'
+
+
 for te in te_bed_iterator:
     te_sequence=te[0]
     te_start=int(te[1])
     te_end=int(te[2])
     te_locusname=te[3]
     te_name = (te_locusname.split("|"))[3]
+    te_strand = te[5] # add strand info
+
     sam_iterator=samfile.fetch(te_sequence,te_start,te_end)
+
     for sam_record in sam_iterator:
+        if is_stranded:
+            # --- STRAND CHECK ---
+            # sam_record.is_reverse is True for "-", False for "+"
+            read_strand = "-" if sam_record.is_reverse else "+"
+            if read_strand != te_strand:
+                continue
+
         if "N" in sam_record.cigarstring:
             length=sam_record.reference_end-sam_record.reference_start+1
             cigar_start = sam_record.reference_start
@@ -41,7 +55,7 @@ for te in te_bed_iterator:
                             continue
 
                         sam_record.set_tag("GX",te_locusname)
-                        if sam_record.mapping_quality == thr:
+                        if sam_record.mapping_quality >= thr:
                             sam_record.set_tag("GN","SoloTE|"+te_locusname)
                         else:
                             sam_record.set_tag("GN","SoloTE|"+te_name)
