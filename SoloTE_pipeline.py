@@ -20,15 +20,26 @@ import argparse
 solote_version = "1.10"
 argparse_object = argparse.ArgumentParser(prog="SoloTE version "+solote_version,description="Analysis of transposable elements in single-cell RNA-Seq data using locus-specific expression")
 
-argparse_object.add_argument("-b","--bam",help="Input BAM file with CB and UB tags",required=True)
-argparse_object.add_argument("-t","--threads",help="Number of threads to use during the pipeline",type=int,required=True)
-argparse_object.add_argument("-d","--outputdir",help="Directory to store the outputs of SoloTE (if it doesn't exist, it will be created)",required=True)
-argparse_object.add_argument("-a","--teannotation",help="TE annotation file in BED format",required=True)
-argparse_object.add_argument("-o","--outputprefix",help="Prefix for output files",required=True)
-argparse_object.add_argument("--dual",help="Consider reads annotated to genes for calculation of TE expression (default = False, only consider non-genic reads).",action='store_true',required=False)
-argparse_object.add_argument("--minoverlap",help="Minimum overlap (in bp) between a read and a TE .",required=False,default=1)
-argparse_object.add_argument("--locusMAPQthr",help="Minimum MAPQ thr to select reads for locus quantification",required=False,default=255)
-argparse_object.add_argument("--stranded", help="Data strandedness", choices=['True', 'False'], default='False')
+
+argparse_object.add_argument("-b","--bam",required=True,
+                            help="Input BAM file with CB and UB tags")
+argparse_object.add_argument("-t","--threads",type=int,required=True,
+                            help="Number of threads to use during the pipeline")
+argparse_object.add_argument("-d","--outputdir",required=True,
+                            help="Directory to store the outputs of SoloTE (if it doesn't exist, it will be created)")
+argparse_object.add_argument("-a","--teannotation",required=True,
+                            help="TE annotation file in BED format")
+argparse_object.add_argument("-o","--outputprefix",required=True,
+                            help="Prefix for output files")
+# Optional Parameters with Defaults
+argparse_object.add_argument("--dual",action='store_true',required=False,
+                            help="Consider reads annotated to genes for calculation of TE expression (default = False, only consider non-genic reads).")
+argparse_object.add_argument("-p", "--overlap_pct", type=float, default=0.5, 
+                            help="Minimum proportion of read overlapping TE (0.0 to 1.0, default: 0.5)")
+argparse_object.add_argument("--locusMAPQthr",required=False,default=255,
+                            help="Minimum MAPQ thr to select reads for locus quantification")
+argparse_object.add_argument("-s", "--strand_mode", choices=['Unstranded', 'Forward', 'Reverse'], default='Unstranded',
+                            help="Strand specificity: Unstranded, Forward, or Reverse")
 
 commandargs = argparse_object.parse_args()
 
@@ -38,9 +49,9 @@ outbase = commandargs.outputdir
 TE_bed = commandargs.teannotation
 outprefix = commandargs.outputprefix
 use_dual_mode = commandargs.dual
-min_overlap = commandargs.minoverlap
+min_overlap = commandargs.overlap_pct
 min_MAPQ = commandargs.locusMAPQthr
-stranded = commandargs.stranded == 'True' # convert to boolean
+strandedness = str(commandargs.strand_mode)
 
 
 starting_time = datetime.now()
@@ -164,9 +175,9 @@ else:
 if os.path.exists(annotated_te_bam):
     print(annotated_te_bam+" exists in output folder. Skipping this step")
 else:
-    annotateBAMpath=SoloTE_Home+"/annotateBAM.py"
+    annotateBAMpath=SoloTE_Home+"/annotateBAM_strandSpecific_paired.py"
     temp_annotated_te_bam = "temp_annotated_te.bam"
-    cmd="python "+annotateBAMpath+" "+te_bam+" "+selected_TEs+" "+temp_annotated_te_bam+" "+str(min_overlap) +" "+str(min_MAPQ)+" "+ str(stranded)
+    cmd="python "+annotateBAMpath+" "+te_bam+" "+selected_TEs+" "+temp_annotated_te_bam+" "+str(min_overlap) +" "+str(min_MAPQ)+" "+ str(strandedness)
     print(cmd)
     os.system(cmd)
     sorted_bam=annotated_te_bam+".sorted."
