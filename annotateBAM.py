@@ -41,7 +41,7 @@ for te in te_bed_iterator:
                             continue
 
                         sam_record.set_tag("GX",te_locusname)
-                        if sam_record.mapping_quality == 255:
+                        if sam_record.mapping_quality >= thr:
                             sam_record.set_tag("GN","SoloTE|"+te_locusname)
                         else:
                             sam_record.set_tag("GN","SoloTE|"+te_name)
@@ -60,7 +60,7 @@ for te in te_bed_iterator:
                       continue
 #                 print(str(te_start)+"\t"+str(te_end)+"\t"+str(cigar_start)+"\t"+str(cigar_end)+"\t"+str(intersection_start)+"\t"+str(intersection_end)+"\t"+str(intersection_length)+"\n")
                  sam_record.set_tag("GX",te_locusname)
-                 if sam_record.mapping_quality == 255:
+                 if sam_record.mapping_quality >= thr:
                       sam_record.set_tag("GN","SoloTE|"+te_locusname)
                  else:
                       sam_record.set_tag("GN","SoloTE|"+te_name)
